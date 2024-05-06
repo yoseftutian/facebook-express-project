@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "firebase": "^10.11.1",
+    "nodemon": "^3.1.0"
   }
 }
