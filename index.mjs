@@ -1,6 +1,7 @@
 import express, { json } from "express";
 import Products from "./products.mjs";
 import Profile from "./profile.mjs";
+import Posts from "./posts.mjs";
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -14,6 +15,7 @@ app.use(cors());
 
 app.use("/products", Products);
 app.use("/profile", Profile);
+app.use("/posts", Posts);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

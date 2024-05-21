@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { postsCollection, productsCollection } from "./database.mjs";
+import { postsCollection } from "./database.mjs";
 import { ObjectId } from "mongodb";
 const router = Router();
 
 router.get("/", async (req, res, next) => {
   try {
-    const products = await postsCollection.find({}).toArray();
-    console.log(products);
-    res.status(200).send(products);
+    const posts = await postsCollection.find({}).toArray();
+    console.log(posts);
+    res.status(200).send(posts);
   } catch (error) {
     next(error);
   }
