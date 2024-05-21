@@ -5,7 +5,9 @@ const router = Router();
 
 router.get("/", async (req, res, next) => {
   try {
+
     const products = await productsCollection.find().toArray();
+    console.log(products);
     res.status(200).send(products);
   } catch (error) {
     next(error);
@@ -20,6 +22,7 @@ router.post("/", async (req, res, next) => {
       .find({ _id: { $in: Object.values(insertedProducts.insertedIds) } })
       .toArray();
     res.status(201).send(products);
+
     console.log();
   } catch (error) {
     next(error);
