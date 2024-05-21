@@ -19,5 +19,5 @@ try {
 
 const db = cluster.db("facebook");
 export const productsCollection = db.collection("products");
-
+export const postsCollection = db.collection("posts");
 export default db;
