@@ -37,8 +37,11 @@ router.get("/:_id", async (req, res, next) => {
     } catch (error) {
         next(error);
     }
+    res.status(200).send(user);
+  } catch (error) {
+    next(error);
+  }
 });
-
 
 router.post("/", async (req, res, next) => {
     try {
@@ -78,4 +81,3 @@ router.post("/login", async (req, res, next) => {
 
 
 export default router;
-
