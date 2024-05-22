@@ -1,6 +1,5 @@
 import express, { json } from "express";
 import Products from "./products.mjs";
-
 import Posts from "./posts.mjs";
 import users from "./users.mjs";
 import dotenv from "dotenv";
