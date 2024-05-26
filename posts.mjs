@@ -20,10 +20,10 @@ router.post("/", async (req, res, next) => {
     session.startTransaction();
     const data = req.body;
     const insertedPost = await postsCollection.insertOne(data, { session });
-    await usersCollection.updateOne(
-      { _id: data.owner },
-      { $push: { posts: insertedPost.insertedId } },
-      { session }
+      await usersCollection.updateOne(
+        { _id: new ObjectId("664e2c9dfcaf4e05148211d1") },
+        { $push: { posts: insertedPost.insertedId } },
+        { session }
     );
     data["_id"] = insertedPost.insertedId;
     await session.commitTransaction();
