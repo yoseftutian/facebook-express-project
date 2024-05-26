@@ -15,7 +15,6 @@ app.use(json());
 app.use(cors());
 
 app.use("/products", Products);
-
 app.use("/posts", Posts);
 app.use("/users", users);
 

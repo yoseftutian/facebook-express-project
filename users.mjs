@@ -23,6 +23,49 @@ const authenticateToken = (req, res, next) => {
 };
 
 
+//Registration endpoint
+router.post("/register", async (req, res, next) => {
+    try {
+        const data = req.body;
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(data.password, saltRounds);
+        data.password = hashedPassword;
+        const insertedUser = await usersCollection.insertOne(data);
+        // console.log(insertedUser);
+        data["_id"] = insertedUser.insertedId
+        console.log(data);
+        res.status(201).send(data);
+    } catch (error) {
+        next(error);
+    }
+});
+
+
+// Login endpoint
+router.post("/login", async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+ 
+        const user = await usersCollection.findOne({ email });
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.status(401).send({ message: 'Invalid credentials' });
+        }
+        const token = jwt.sign({ id: user._id }, SECRET_KEY, { expiresIn: '1h' });
+        res.status(200).send(token);
+    } catch (error) {
+        next(error);
+    }
+});
+
+
+
+
+
+
 
 
 
@@ -40,42 +83,29 @@ router.get("/:_id", async (req, res, next) => {
 });
 
 
-
-
-router.post("/", async (req, res, next) => {
+router.post("/addFreind/", async (req, res, next) => {
     try {
-        const data = req.body;
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(data.password, saltRounds);
-        data.password = hashedPassword;
-        const insertedUser = await usersCollection.insertOne(data);
-        // console.log(insertedUser);
-        data["_id"] = insertedUser.insertedId
-        console.log(data);
-        res.status(201).send(data);
-    } catch (error) {
-        next(error);
+        const userId = req.body.userId;
+        const freindId = req.body.FreindId;
+        const result = await usersCollection.updateOne({ _id: new ObjectId(userId) }, { $push: { freinds: new ObjectId(freindId) } });
+        console.log(result);
+        res.status(201).send(`added sucssesfuly ${result.modifiedCount}`);
     }
-});
+    catch (error) {
+        next(error)
+    }
+})
 
-// Login route
-router.post("/login", async (req, res, next) => {
-    try {
-        const { username, password } = req.body;
-        const user = await usersCollection.findOne({ username });
-        if (!user) {
-            return res.status(404).send({ message: 'User not found' });
-        }
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
-            return res.status(401).send({ message: 'Invalid credentials' });
-        }
-        const token = jwt.sign({ id: user._id }, SECRET_KEY, { expiresIn: '1h' });
-        res.send(token);
-    } catch (error) {
-        next(error);
-    }
-});
+
+
+
+
+
+
+
+
+
+
 
 
 
