@@ -5,6 +5,9 @@ import users from "./users.mjs";
 import dotenv from "dotenv";
 import cors from "cors";
 
+// import connectDB from './config/connectDB.mjs'; // Importing connectDB directly
+// import router from './routes/index.mjs'; // Importing router directly
+ 
 dotenv.config();
 
 const app = express();
@@ -18,6 +21,9 @@ app.use("/products", Products);
 app.use("/chats", Products);
 app.use("/posts", Posts);
 app.use("/users", users);
+
+// //api endpoints
+// app.use('/api',router)
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
