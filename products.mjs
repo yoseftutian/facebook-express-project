@@ -1,31 +1,53 @@
 import { Router } from "express";
-import { productsCollection } from "./database.mjs";
+import { client, productsCollection, usersCollection } from "./database.mjs";
 import { ObjectId } from "mongodb";
 const router = Router();
 
 router.get("/", async (req, res, next) => {
   try {
-
     const products = await productsCollection.find().toArray();
-    console.log(products);
+    // console.log(products);
     res.status(200).send(products);
   } catch (error) {
     next(error);
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.get("/:_id", async (req, res, next) => {
   try {
-    const data = [...req.body];
-    const insertedProducts = await productsCollection.insertMany(data);
-    const products = await productsCollection
-      .find({ _id: { $in: Object.values(insertedProducts.insertedIds) } })
-      .toArray();
-    res.status(201).send(products);
-
-    console.log();
+    const product = await productsCollection.findOne({
+      _id: new ObjectId(req.params._id),
+    });
+    // console.log(product);
+    res.status(200).send(product);
   } catch (error) {
     next(error);
+  }
+});
+
+router.post("/", async (req, res, next) => {
+  const session = client.startSession();
+
+  try {
+    session.startTransaction();
+
+    const data = req.body;
+    const insertedProduct = await productsCollection.insertOne(data, {
+      session,
+    });
+    await usersCollection.updateOne(
+      { _id: new ObjectId(data.owner) },
+      { $push: { products: insertedProduct.insertedId } },
+      { session }
+    );
+    data["_id"] = insertedProduct.insertedId;
+    await session.commitTransaction();
+    res.status(201).send(data);
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    await session.endSession();
   }
 });
 
