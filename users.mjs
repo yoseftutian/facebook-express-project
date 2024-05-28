@@ -37,14 +37,6 @@ router.post("/register", async (req, res, next) => {
   }
 });
 
-router.get("/:_id", async (req, res, next) => {
-  try {
-    const user = await usersCollection.findOne({
-      _id: new ObjectId(req.params._id),
-    });
-    if (!user) {
-      return res.status(404).send({ error: "Profile not found" });
-
 
 router.post("/", async (req, res, next) => {
   try {
