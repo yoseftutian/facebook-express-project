@@ -67,4 +67,19 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-export default router;
+
+router.get("freinds/:_id", async (req, res, next) => {
+  try {
+    const user = await usersCollection.findOne({
+      _id: new ObjectId(req.params._id),
+    });
+    if (!user) {
+      return res.status(404).send({ error: "Profile not found" });
+    }
+    res.status(200).send(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+export default router;
