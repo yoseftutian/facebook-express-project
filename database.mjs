@@ -1,7 +1,6 @@
 import { MongoClient, ServerApiVersion } from "mongodb";
 import dotenv from "dotenv";
 
-// טוען את משתני הסביבה מהקובץ .env
 dotenv.config();
 
 const mongoURI = process.env.SECRET_MONGO;

@@ -6,7 +6,7 @@ const router = Router();
 router.get("/", async (req, res, next) => {
   try {
     const products = await productsCollection.find().toArray();
-    console.log(products);
+    // console.log(products);
     res.status(200).send(products);
   } catch (error) {
     next(error);
@@ -18,7 +18,7 @@ router.get("/:_id", async (req, res, next) => {
     const product = await productsCollection.findOne({
       _id: new ObjectId(req.params._id),
     });
-    console.log(product);
+    // console.log(product);
     res.status(200).send(product);
   } catch (error) {
     next(error);
