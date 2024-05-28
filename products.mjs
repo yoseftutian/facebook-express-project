@@ -13,6 +13,18 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.get("/:_id", async (req, res, next) => {
+  try {
+    const product = await productsCollection.findOne({
+      _id: new ObjectId(req.params._id),
+    });
+    console.log(product);
+    res.status(200).send(product);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post("/", async (req, res, next) => {
   const session = client.startSession();
 

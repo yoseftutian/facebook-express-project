@@ -33,5 +33,6 @@ export const productsCollection = db.collection("products");
 export const postsCollection = db.collection("posts");
 export const chatsCollection = db.collection("chats");
 export const usersCollection = db.collection("users");
+export const groupsCollection = db.collection("groups");
 
 export default db;
