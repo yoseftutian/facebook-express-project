@@ -15,6 +15,17 @@ router.get("/:_id", async (req, res, next) => {
   }
 });
 
+
+router.get("/", async (req, res, next) => {
+  try {
+    const groups = await groupsCollection.find().toArray(
+    );
+    res.status(200).send(groups);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post("/", async (req, res, next) => {
   const session = client.startSession();
   try {
