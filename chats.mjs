@@ -8,12 +8,11 @@
 // //     try {
 // //       const data = req.body;
 // //       const insertedChat = await chatsCollection.insertOne(data);
-// //       data["_id"] = insertedChat.insertedId; 
+// //       data["_id"] = insertedChat.insertedId;
 // //       res.status(201).send(data);
 // //     } catch (error) {
 // //       next(error);
 // //     }
-// //   });
-  
+// //   });sssss
 
 // export default router; // Export the router instance
