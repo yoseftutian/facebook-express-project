@@ -12,12 +12,13 @@ router.post("/login", async (req, res, next) => {
     const { email, password } = req.body;
     const user = await usersCollection.findOne({ email }); // Find user by email
     console.log(user);
-    if (await bcrypt.compare(password, user["password"])) { // Compare provided password with stored hashed password
+    if (await bcrypt.compare(password, user["password"])) {
+      // Compare provided password with stored hashed password
       delete user["password"]; // Remove password from user object for security reasons
       const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
         algorithm: "HS256",
       }); // Create JWT token
-      const data = { user_id: user._id, token }; // Prepare response data
+      const data = { user_id: user._id, token, profileImg: user.profileImg }; // Prepare response data
       res.status(200).send(data); // Send response
     } else {
       throw new Error("Password does not match"); // Handle incorrect password
@@ -46,9 +47,6 @@ router.get("/:_id", async (req, res, next) => {
     const user = await usersCollection.findOne({
       _id: new ObjectId(req.params._id),
     }); // Find user by ID
-    if (!user) {
-      return res.status(404).send({ error: "Profile not found" }); // Handle user not found
-    }
     res.status(200).send(user); // Send user data
   } catch (error) {
     next(error); // Pass error to error handler
@@ -61,7 +59,7 @@ router.post("/", async (req, res, next) => {
     const data = req.body;
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(data.password, saltRounds); // Hash password
-    data.password = hashedPassword; 
+    data.password = hashedPassword;
     const insertedUser = await usersCollection.insertOne(data); // Insert new user into collection
     data["_id"] = insertedUser.insertedId; // Add the generated ID to the user data
     console.log(data);
