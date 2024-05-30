@@ -3,6 +3,7 @@ import Products from "./products.mjs";
 import Posts from "./posts.mjs";
 import Groups from "./groups.mjs";
 import users from "./users.mjs";
+import freinds from "./freinds.mjs";
 import { expressjwt as jwt } from "express-jwt";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -26,6 +27,7 @@ app.use("/chats", Products);
 app.use("/posts", Posts);
 app.use("/users", users);
 app.use("/groups", Groups);
+app.use("/freinds", freinds);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

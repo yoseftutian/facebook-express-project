@@ -8,7 +8,7 @@ const router = Router();
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await usersCollection.findOne({ email });
+    const user = await usersCollection.findOne({  email });
     console.log(user);
     if (await bcrypt.compare(password, user["password"])) {
       delete user["password"];
@@ -39,10 +39,9 @@ router.post("/register", async (req, res, next) => {
 
 
 router.get("/:_id", async (req, res, next) => {
+  const userId = new ObjectId(req.params._id);
   try {
-    const user = await usersCollection.findOne({
-      _id: new ObjectId(req.params._id),
-    });
+    const user = await usersCollection.findOne({_id: userId});
     if (!user) {
       return res.status(404).send({ error: "Profile not found" });
     }
@@ -69,18 +68,9 @@ router.post("/", async (req, res, next) => {
 });
 
 
-router.get("freinds/:_id", async (req, res, next) => {
-  try {
-    const user = await usersCollection.findOne({
-      _id: new ObjectId(req.params._id),
-    });
-    if (!user) {
-      return res.status(404).send({ error: "Profile not found" });
-    }
-    res.status(200).send(user);
-  } catch (error) {
-    next(error);
-  }
-});
+
+
+
+
 
 export default router;
