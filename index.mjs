@@ -1,37 +1,83 @@
-import express, { json } from "express";
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import Products from "./products.mjs";
 import Posts from "./posts.mjs";
 import Groups from "./groups.mjs";
 import users from "./users.mjs";
+import chatRoutes from "./chats.mjs";
 import { expressjwt as jwt } from "express-jwt";
 import dotenv from "dotenv";
 import cors from "cors";
-// import { randomBytes } from "crypto";
+import { chatsCollection } from "./database.mjs";
+
 dotenv.config();
-// console.log(randomBytes(64).toString("hex"));
 
 const app = express();
 const port = 3005;
-
-app.use(json());
 app.use(cors());
+app.use(express.json());
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*", // Allow all origins (for development)
+  },
+});
+
+// JWT Middleware
 app.use(
   jwt({
     secret: process.env.JWT_SECRET,
     algorithms: ["HS256"],
   }).unless({ path: ["/users/login", "/users/register"] })
 );
+
+// Routes
 app.use("/products", Products);
-app.use("/chats", Products);
 app.use("/posts", Posts);
 app.use("/users", users);
 app.use("/groups", Groups);
+app.use("/chats", chatRoutes);
 
+// Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send(err.message);
+  res.status(err.status || 500).send({ message: err.message });
 });
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+// Socket.IO connection event
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  // Listen for chat messages
+  socket.on("chat message", async (msg) => {
+    console.log("Message received:", msg);
+
+    // Save the chat message to the database
+    try {
+      const insertedChat = await chatsCollection.insertOne({
+        message: msg,
+        timestamp: new Date(),
+      });
+      const chatMessage = {
+        _id: insertedChat.insertedId,
+        message: msg,
+        timestamp: new Date(),
+      };
+      io.emit("chat message", chatMessage); // Broadcast message to all clients
+    } catch (error) {
+      console.error("Error saving chat message:", error);
+    }
+  });
+
+  // Handle user disconnect
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
+// Start the server
+httpServer.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });

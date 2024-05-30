@@ -1,0 +1,18 @@
+//   // Save the chat message to the database
+//     try {
+//       if (!chat._id) {
+//         const chatCreated = await chatsCollection.insertOne({
+//           createdAt: new Date(),
+//           ...chat,
+//         });
+//         msg["chatId"] = chatCreated.insertedId;
+//       }
+//       const insertedChat = await chatsCollection.insertOne({
+//         message: msg,
+//         timestamp: new Date(),
+//       });
+//       const chatMessage = {
+//         _id: insertedChat.insertedId,
+//         message: msg,
+//         timestamp: new Date(),
+//       };
