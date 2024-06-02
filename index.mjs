@@ -5,11 +5,8 @@ import Products from "./products.mjs";
 import Posts from "./posts.mjs";
 import Groups from "./groups.mjs";
 import users from "./users.mjs";
-
 import chatRoutes from "./chats.mjs";
-
 import freinds from "./freinds.mjs";
-
 import { expressjwt as jwt } from "express-jwt";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -42,11 +39,8 @@ app.use("/products", Products);
 app.use("/posts", Posts);
 app.use("/users", users);
 app.use("/groups", Groups);
-
 app.use("/chats", chatRoutes);
-
 app.use("/freinds", freinds);
-
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

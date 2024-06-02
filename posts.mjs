@@ -4,6 +4,16 @@ import { ObjectId } from "mongodb"; // Importing ObjectId to handle MongoDB Obje
 const router = Router(); // Creating a new router instance
 
 // GET request to fetch a single post by ID
+router.get("/", async (req, res, next) => {
+  try {
+    const post = await postsCollection.find().toArray();
+    res.status(200).send(post); // Send the post as response with status 200
+  } catch (error) {
+    next(error); // Pass any errors to the error-handling middleware
+  }
+});
+
+// GET request to fetch a single post by ID
 router.get("/:_id", async (req, res, next) => {
   try {
     const post = await postsCollection.findOne({
