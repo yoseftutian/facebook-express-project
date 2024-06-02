@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 const router = Router();
 
 // POST /login route for user authentication
-router.post("/login", async (req, res, next) => {
+router.post("/login", async (req, res, next) =>   {
   try {
     const { email, password } = req.body;
     const user = await usersCollection.findOne({ email }); // Find user by email
@@ -45,7 +45,7 @@ router.post("/register", async (req, res, next) => {
 router.get("/:_id", async (req, res, next) => {
   const userId = new ObjectId(req.params._id);
   try {
-    const user = await usersCollection.findOne({_id: userId});
+    const user = await usersCollection.findOne({ _id: userId });
     if (!user) {
       return res.status(404).send({ error: "Profile not found" });
     }
@@ -71,6 +71,19 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+//it uses to get list of idis and to send their picture back
+router.post("/pictures", async (req, res, next) => {
+  try {
+    const idis = req.body.freinds.map(id => new ObjectId(id))
+    // const pictures = await usersCollection.find({ _id: { $in: idis } }, { projection: { baverImg: 1 } }).toArray();
+    const pictures = await usersCollection.find({ _id: { $in: idis } }, { projection: { baverImg: 1 } }).toArray();
+    console.log("idids:::::::::;", pictures);
+    // console.log("pics:::::::::;", pictures);
+    res.status(200).json(pictures);
+  } catch (error) {
+    next(error)
+  }
+})
 
 
 
