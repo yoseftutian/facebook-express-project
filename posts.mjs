@@ -33,6 +33,7 @@ router.post("/", async (req, res, next) => {
     session.startTransaction(); // Start the transaction
 
     const data = req.body; // Get the data from the request body
+    data["createdAt"] = new Date();
     const insertedPost = await postsCollection.insertOne(data, { session }); // Insert the new post into the postsCollection within the session
     await usersCollection.updateOne(
       { _id: new ObjectId(data.owner) }, // Find the user by owner ID

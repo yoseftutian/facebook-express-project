@@ -13,6 +13,7 @@ import cors from "cors";
 import { chatsCollection } from "./database.mjs";
 
 dotenv.config();
+const sockets = {};
 
 const app = express();
 const port = 3005;
@@ -50,6 +51,8 @@ app.use((err, req, res, next) => {
 
 // Socket.IO connection event
 io.on("connection", (socket) => {
+  const { id } = socket.handshake.query;
+  sockets[id] = socket.id;
   console.log("A user connected:", socket.id);
 
   // Listen for chat messages
@@ -58,16 +61,7 @@ io.on("connection", (socket) => {
 
     // Save the chat message to the database
     try {
-      const insertedChat = await chatsCollection.insertOne({
-        message: msg,
-        timestamp: new Date(),
-      });
-      const chatMessage = {
-        _id: insertedChat.insertedId,
-        message: msg,
-        timestamp: new Date(),
-      };
-      io.emit("chat message", chatMessage); // Broadcast message to all clients
+      io.emit("chat message", msg); // Broadcast message to all clients
     } catch (error) {
       console.error("Error saving chat message:", error);
     }
