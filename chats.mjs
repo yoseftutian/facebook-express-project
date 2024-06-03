@@ -1,34 +1,19 @@
-import { Router } from 'express';
-import { chatsCollection } from './database.mjs';
-import { ObjectId } from 'mongodb';
+import { Router } from "express";
+import { chatsCollection } from "./database.mjs";
+import { ObjectId } from "mongodb";
 
 const router = Router();
 
 // Route to create a new chat message
 router.post("/", async (req, res, next) => {
   try {
-    const { senderId, receiverId, message } = req.body;
-    
-    // Ensure senderId and receiverId are provided
-    if (!senderId || !receiverId) {
-      res.status(400).send({ message: "Both senderId and receiverId are required" });
-      return;
-    }
-
-    // Create the chat message object
-    const chatMessage = {
-      senderId,
-      receiverId,
-      message,
-      timestamp: new Date()
-    };
-
-    // Insert the chat message into the database
-    const insertedChat = await chatsCollection.insertOne(chatMessage);
-
-    // Return the inserted chat message
-    res.status(201).send(insertedChat.ops[0]);
+    const chat = req.body;
+    chat["createdAt"] = new Date();
+    const chatCreated = await chatsCollection.insertOne(chat);
+    chat["_id"] = chatCreated.insertedId;
+    res.status(201).send(chat);
   } catch (error) {
+    console.error("Error saving chat message:", error);
     next(error);
   }
 });
@@ -39,12 +24,14 @@ router.get("/:senderId/:receiverId", async (req, res, next) => {
     const { senderId, receiverId } = req.params;
 
     // Retrieve all chat messages between the sender and receiver
-    const chats = await chatsCollection.find({
-      $or: [
-        { senderId, receiverId },
-        { senderId: receiverId, receiverId: senderId }
-      ]
-    }).toArray();
+    const chats = await chatsCollection
+      .find({
+        $or: [
+          { senderId, receiverId },
+          { senderId: receiverId, receiverId: senderId },
+        ],
+      })
+      .toArray();
 
     // Return the chat messages
     res.status(200).send(chats);

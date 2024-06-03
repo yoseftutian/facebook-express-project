@@ -10,7 +10,7 @@ import freinds from "./freinds.mjs";
 import { expressjwt as jwt } from "express-jwt";
 import dotenv from "dotenv";
 import cors from "cors";
-import { chatsCollection } from "./database.mjs";
+import { chatsCollection, client, messagesCollection } from "./database.mjs";
 
 dotenv.config();
 const sockets = {};
@@ -57,14 +57,29 @@ io.on("connection", (socket) => {
 
   // Listen for chat messages
   socket.on("chat message", async (msg) => {
-    console.log("Message received:", msg);
-
-    // Save the chat message to the database
+    //msg: { content, type, sender, chat_id, participants }
+    const session = client.startSession();
     try {
-      io.emit("chat message", msg); // Broadcast message to all clients
+      session.startTransaction();
+      const { participants, ...message } = msg;
+      const messageCreated = await messagesCollection.insertOne(message, {
+        session,
+      });
+      await chatsCollection.updateOne(
+        { _id: message.chat_id },
+        { $push: { messages: messageCreated.insertedId } },
+        { session }
+      );
+      await session.commitTransaction();
+      message["_id"] = messageCreated.insertedId;
+      socket.to[participants.map((p) => sockets[p])].emit(message);
     } catch (error) {
-      console.error("Error saving chat message:", error);
+      console.error(error);
+      await session.abortTransaction();
+    } finally {
+      await session.endSession();
     }
+    console.log("Message received:", msg);
   });
 
   // Handle user disconnect
