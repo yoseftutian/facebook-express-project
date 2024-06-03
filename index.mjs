@@ -16,6 +16,7 @@ import cors from "cors";
 import { chatsCollection } from "./database.mjs";
 
 dotenv.config();
+const sockets = {};
 
 const app = express();
 const port = 3005;
@@ -47,7 +48,6 @@ app.use("/chats", chatRoutes);
 
 app.use("/freinds", freinds);
 
-
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -56,6 +56,8 @@ app.use((err, req, res, next) => {
 
 // Socket.IO connection event
 io.on("connection", (socket) => {
+  const { id } = socket.handshake.query;
+  sockets[id] = socket.id;
   console.log("A user connected:", socket.id);
 
   // Listen for chat messages
