@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { chatsCollection } from "./database.mjs";
+import { chatsCollection, usersCollection } from "./database.mjs";
 import { ObjectId } from "mongodb";
 
 const router = Router();
@@ -10,6 +10,12 @@ router.post("/", async (req, res, next) => {
     const chat = req.body;
     chat["createdAt"] = new Date();
     const chatCreated = await chatsCollection.insertOne(chat);
+    await usersCollection.updateMany(
+      { _id: { $in: chat.participants.map((p) => new ObjectId(p)) } },
+      {
+        $push: { chats: chatCreated.insertedId },
+      }
+    );
     chat["_id"] = chatCreated.insertedId;
     res.status(201).send(chat);
   } catch (error) {
