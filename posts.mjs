@@ -16,10 +16,10 @@ router.get("/", async (req, res, next) => {
 // GET request to fetch a single post by ID
 router.get("/:_id", async (req, res, next) => {
   try {
-    const post = await postsCollection.findOne({
-      _id: new ObjectId(req.params._id), // Convert the _id parameter to ObjectId
-    });
-    res.status(200).send(post); // Send the post as response with status 200
+    const userPosts = await postsCollection.find({
+      owner: req.params._id, 
+    }).toArray(); 
+    res.status(200).send(userPosts); // Send the post as response with status 200
   } catch (error) {
     next(error); // Pass any errors to the error-handling middleware
   }
