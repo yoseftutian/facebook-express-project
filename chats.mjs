@@ -6,21 +6,29 @@ const router = Router();
 
 // Route to create a new chat message
 router.post("/", async (req, res, next) => {
+  const session = client.startSession(); // Start a new session for transaction
+
   try {
+    session.startTransaction();
     const chat = req.body;
     chat["createdAt"] = new Date();
-    const chatCreated = await chatsCollection.insertOne(chat);
+    const chatCreated = await chatsCollection.insertOne(chat, { session });
     await usersCollection.updateMany(
       { _id: { $in: chat.participants.map((p) => new ObjectId(p)) } },
       {
         $push: { chats: chatCreated.insertedId },
-      }
+      },
+      { session }
     );
     chat["_id"] = chatCreated.insertedId;
+    await session.commitTransaction();
     res.status(201).send(chat);
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error saving chat message:", error);
     next(error);
+  } finally {
+    await session.endSession(); // End the session
   }
 });
 
