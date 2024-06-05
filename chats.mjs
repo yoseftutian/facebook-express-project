@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { chatsCollection, usersCollection } from "./database.mjs";
+import {
+  chatsCollection,
+  client,
+  messagesCollection,
+  usersCollection,
+} from "./database.mjs";
 import { ObjectId } from "mongodb";
 
 const router = Router();
@@ -33,22 +38,19 @@ router.post("/", async (req, res, next) => {
 });
 
 // Route to retrieve all chat messages between two users
-router.get("/:senderId/:receiverId", async (req, res, next) => {
+router.get("/:id/messages", async (req, res, next) => {
   try {
-    const { senderId, receiverId } = req.params;
-
     // Retrieve all chat messages between the sender and receiver
-    const chats = await chatsCollection
+    const chat = await chatsCollection.findOne({
+      _id: new ObjectId(req.params.id),
+    });
+    const messages = await messagesCollection
       .find({
-        $or: [
-          { senderId, receiverId },
-          { senderId: receiverId, receiverId: senderId },
-        ],
+        _id: { $in: chat.messages.map((m) => new ObjectId(m)) },
       })
       .toArray();
-
     // Return the chat messages
-    res.status(200).send(chats);
+    res.status(200).send(messages);
   } catch (error) {
     next(error);
   }
@@ -57,13 +59,21 @@ router.get("/:senderId/:receiverId", async (req, res, next) => {
 // Route to retrieve a single chat message by ID
 router.get("/:id", async (req, res, next) => {
   try {
-    const chatId = new ObjectId(req.params.id);
-    const chat = await chatsCollection.findOne({ _id: chatId });
-    if (!chat) {
+    const user = await usersCollection.findOne({
+      _id: new ObjectId(req.params.id),
+    });
+    if (!user.chats) {
+      res.status(200).send("No chats");
+    }
+    const chats = await chatsCollection
+      .find({ _id: { $in: user.chats } })
+      .toArray();
+    console.log(chats);
+    if (!chats) {
       res.status(404).send({ message: "Chat not found" });
       return;
     }
-    res.status(200).send(chat);
+    res.status(200).send(chats);
   } catch (error) {
     next(error);
   }

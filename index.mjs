@@ -11,6 +11,7 @@ import { expressjwt as jwt } from "express-jwt";
 import dotenv from "dotenv";
 import cors from "cors";
 import { chatsCollection, client, messagesCollection } from "./database.mjs";
+import { ObjectId } from "mongodb";
 
 dotenv.config();
 const sockets = {};
@@ -66,24 +67,30 @@ io.on("connection", (socket) => {
         session,
       });
       await chatsCollection.updateOne(
-        { _id: message.chat_id },
+        { _id: new ObjectId(message.chat_id) },
         { $push: { messages: messageCreated.insertedId } },
         { session }
       );
       await session.commitTransaction();
       message["_id"] = messageCreated.insertedId;
-      socket.to[participants.map((p) => sockets[p])].emit(message);
+      io.to(
+        participants.map((p) => sockets[p]).filter((p) => p !== undefined)
+      ).emit("chat message", message);
     } catch (error) {
       console.error(error);
       await session.abortTransaction();
     } finally {
       await session.endSession();
     }
-    console.log("Message received:", msg);
   });
 
   // Handle user disconnect
   socket.on("disconnect", () => {
+    for (const key in sockets) {
+      if (sockets.hasOwnProperty(key) && sockets[key] == socket.id) {
+        delete sockets[key];
+      }
+    }
     console.log("User disconnected:", socket.id);
   });
 });
