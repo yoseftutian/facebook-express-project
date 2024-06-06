@@ -50,7 +50,7 @@ router.post("/addFreind", async (req, res, next) => {
     try {
         const user1 = await usersCollection.updateOne({_id: uid}, {$addToSet: {freinds: fid}});
         const user2 = await usersCollection.updateOne({_id: fid}, {$addToSet: {freinds: uid}});
-        console.log("user1:", user1, "user2:", user2);
+        // console.log("user1:", user1, "user2:", user2);
        
         res.status(200).send(true);
     } catch (error) {

@@ -37,10 +37,8 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-// Route to retrieve all chat messages between two users
 router.get("/:id/messages", async (req, res, next) => {
   try {
-    // Retrieve all chat messages between the sender and receiver
     const chat = await chatsCollection.findOne({
       _id: new ObjectId(req.params.id),
     });
