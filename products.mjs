@@ -55,15 +55,28 @@ router.post("/", async (req, res, next) => {
 });
 
 // DELETE request to delete a product by ID
-router.delete("/:_id", async (req, res, next) => {
+router.delete("/:_id/:user_id", async (req, res, next) => {
+  const session = client.startSession();
   try {
-    const deleted = await productsCollection.deleteOne({
-      _id: new ObjectId(req.params._id), // Convert the _id parameter to ObjectId
-    });
-    if (!deleted.deletedCount) throw new Error("Could not delete."); // Throw error if no document was deleted
+    session.startTransaction();
+    await productsCollection.deleteOne(
+      {
+        _id: new ObjectId(req.params._id), // Convert the _id parameter to ObjectId
+      },
+      { session }
+    );
+    await usersCollection.updateOne(
+      { _id: new ObjectId(req.params.user_id) },
+      { $pull: { products: { _id: req.params._id } } },
+      { session }
+    );
+    await session.commitTransaction();
     res.status(200).send("Deleted"); // Send a success message with status 200
   } catch (error) {
+    await session.abortTransaction(); // Abort the transaction in case of error
     next(error); // Pass any errors to the error-handling middleware
+  } finally {
+    session.endSession();
   }
 });
 
