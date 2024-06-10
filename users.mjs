@@ -76,7 +76,7 @@ router.post("/pictures", async (req, res, next) => {
   try {
     const idis = req.body.freinds.map(id => new ObjectId(id))
     // const pictures = await usersCollection.find({ _id: { $in: idis } }, { projection: { baverImg: 1 } }).toArray();
-    const pictures = await usersCollection.find({ _id: { $in: idis } }, { projection: { baverImg: 1 } }).toArray();
+    const pictures = await usersCollection.find({ _id: { $in: idis } }, { projection: { baverImg: 1 , profileImg: 1 } }).toArray();
     console.log("idids:::::::::;", pictures);
     // console.log("pics:::::::::;", pictures);
     res.status(200).json(pictures);
