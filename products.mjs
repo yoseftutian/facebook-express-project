@@ -54,7 +54,6 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-// DELETE request to delete a product by ID
 router.delete("/:_id/:user_id", async (req, res, next) => {
   const session = client.startSession();
   try {
@@ -67,7 +66,7 @@ router.delete("/:_id/:user_id", async (req, res, next) => {
     );
     await usersCollection.updateOne(
       { _id: new ObjectId(req.params.user_id) },
-      { $pull: { products: { _id: req.params._id } } },
+      { $pull: { products: { _id: new ObjectId(req.params._id) } } },
       { session }
     );
     await session.commitTransaction();
@@ -80,4 +79,4 @@ router.delete("/:_id/:user_id", async (req, res, next) => {
   }
 });
 
-export default router; // Export the router as default
+export default router;

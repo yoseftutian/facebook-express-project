@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 const router = Router();
 
 // POST /login route for user authentication
-router.post("/login", async (req, res, next) =>   {
+router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await usersCollection.findOne({ email }); // Find user by email
@@ -55,6 +55,15 @@ router.get("/:_id", async (req, res, next) => {
   }
 });
 
+router.get("/", async (req, res, next) => {
+  try {
+    const users = await usersCollection.find().toArray();
+    console.log(users);
+    res.status(200).send(users);
+  } catch (error) {
+    next(error);
+  }
+});
 // POST / route to create a new user (similar to /register)
 router.post("/", async (req, res, next) => {
   try {
@@ -74,20 +83,20 @@ router.post("/", async (req, res, next) => {
 //it uses to get list of idis and to send their picture back
 router.post("/pictures", async (req, res, next) => {
   try {
-    const idis = req.body.freinds.map(id => new ObjectId(id))
+    const idis = req.body.freinds.map((id) => new ObjectId(id));
     // const pictures = await usersCollection.find({ _id: { $in: idis } }, { projection: { baverImg: 1 } }).toArray();
-    const pictures = await usersCollection.find({ _id: { $in: idis } }, { projection: { baverImg: 1 , profileImg: 1 } }).toArray();
+    const pictures = await usersCollection
+      .find(
+        { _id: { $in: idis } },
+        { projection: { baverImg: 1, profileImg: 1 } }
+      )
+      .toArray();
     console.log("idids:::::::::;", pictures);
     // console.log("pics:::::::::;", pictures);
     res.status(200).json(pictures);
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
-
-
-
-
-
+});
 
 export default router;
