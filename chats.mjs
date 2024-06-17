@@ -10,30 +10,65 @@ import { ObjectId } from "mongodb";
 const router = Router();
 
 // Route to create a new chat message
-router.post("/", async (req, res, next) => {
-  const session = client.startSession(); // Start a new session for transaction
+// router.post("/", async (req, res, next) => {
+//   const session = client.startSession(); // Start a new session for transaction
 
+//   try {
+//     session.startTransaction();
+//     const chat = req.body;
+//     chat["createdAt"] = new Date();
+//     const chatCreated = await chatsCollection.insertOne(chat, { session });
+//     await usersCollection.updateMany(
+//       { _id: { $in: chat.participants.map((p) => new ObjectId(p)) } },
+//       {
+//         $push: { chats: chatCreated.insertedId },
+//       },
+//       { session }
+//     );
+//     chat["_id"] = chatCreated.insertedId;
+//     await session.commitTransaction();
+//     res.status(201).send(chat);
+//   } catch (error) {
+//     await session.abortTransaction();
+//     console.error("Error saving chat message:", error);
+//     next(error);
+//   } finally {
+//     await session.endSession(); // End the session
+//   }
+// });
+router.post("/", async (req, res, next) => {
+  const session = client.startSession();
   try {
     session.startTransaction();
     const chat = req.body;
     chat["createdAt"] = new Date();
-    const chatCreated = await chatsCollection.insertOne(chat, { session });
-    await usersCollection.updateMany(
-      { _id: { $in: chat.participants.map((p) => new ObjectId(p)) } },
-      {
-        $push: { chats: chatCreated.insertedId },
-      },
-      { session }
-    );
-    chat["_id"] = chatCreated.insertedId;
-    await session.commitTransaction();
-    res.status(201).send(chat);
+
+    // Check if a chat with the same participants already exists
+    const existingChat = await chatsCollection.findOne({
+      participants: { $all: chat.participants },
+    });
+
+    if (existingChat) {
+      // A chat with the same participants already exists, return the existing chat
+      res.status(200).send("existing");
+    } else {
+      // No existing chat found, create a new one
+      const chatCreated = await chatsCollection.insertOne(chat, { session });
+      await usersCollection.updateMany(
+        { _id: { $in: chat.participants.map((p) => new ObjectId(p)) } },
+        { $push: { chats: chatCreated.insertedId } },
+        { session }
+      );
+      chat["_id"] = chatCreated.insertedId;
+      await session.commitTransaction();
+      res.status(201).send(chat);
+    }
   } catch (error) {
     await session.abortTransaction();
     console.error("Error saving chat message:", error);
     next(error);
   } finally {
-    await session.endSession(); // End the session
+    await session.endSession();
   }
 });
 
@@ -43,14 +78,15 @@ router.get("/:id/messages", async (req, res, next) => {
       _id: new ObjectId(req.params.id),
     });
 
-    const messages = chat.messages.length > 0
-    ? await messagesCollection
-        .find({
-          _id: { $in: chat.messages.map((m) => new ObjectId(m)) },
-        })
-        .toArray()
-    : [];
-    
+    const messages =
+      chat.messages.length > 0
+        ? await messagesCollection
+            .find({
+              _id: { $in: chat.messages.map((m) => new ObjectId(m)) },
+            })
+            .toArray()
+        : [];
+
     // Return the chat messages
     res.status(200).send(messages);
   } catch (error) {
