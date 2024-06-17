@@ -42,11 +42,15 @@ router.get("/:id/messages", async (req, res, next) => {
     const chat = await chatsCollection.findOne({
       _id: new ObjectId(req.params.id),
     });
-    const messages = await messagesCollection
-      .find({
-        _id: { $in: chat.messages.map((m) => new ObjectId(m)) },
-      })
-      .toArray();
+
+    const messages = chat.messages.length > 0
+    ? await messagesCollection
+        .find({
+          _id: { $in: chat.messages.map((m) => new ObjectId(m)) },
+        })
+        .toArray()
+    : [];
+    
     // Return the chat messages
     res.status(200).send(messages);
   } catch (error) {
