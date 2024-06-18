@@ -50,7 +50,7 @@ router.post("/", async (req, res, next) => {
 
     if (existingChat) {
       // A chat with the same participants already exists, return the existing chat
-      res.status(200).send("existing");
+      res.status(200).send({ status: "existing", myChat: existingChat });
     } else {
       // No existing chat found, create a new one
       const chatCreated = await chatsCollection.insertOne(chat, { session });
@@ -61,7 +61,7 @@ router.post("/", async (req, res, next) => {
       );
       chat["_id"] = chatCreated.insertedId;
       await session.commitTransaction();
-      res.status(201).send(chat);
+      res.status(201).send({ status: "notExisting", myChat: chat });
     }
   } catch (error) {
     await session.abortTransaction();
