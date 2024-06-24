@@ -58,7 +58,7 @@ router.get("/:_id", async (req, res, next) => {
 router.get("/", async (req, res, next) => {
   try {
     const users = await usersCollection.find().toArray();
-    console.log(users);
+    // console.log(users);
     res.status(200).send(users);
   } catch (error) {
     next(error);
@@ -94,6 +94,33 @@ router.post("/pictures", async (req, res, next) => {
     console.log("idids:::::::::;", pictures);
     // console.log("pics:::::::::;", pictures);
     res.status(200).json(pictures);
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+router.post("/commonFriendsPictures", async (req, res, next) => {
+  try {
+    // console.log(req.body);
+    const { uid, freinds } = req.body;
+    const activUserId = new ObjectId(uid);
+    const displayedUserFriendsStr = freinds;
+    const result = await usersCollection.findOne({ _id: activUserId }, { projection: { freinds: 1, _id: 0 } });
+    const activUserFreinds = result.freinds;
+    const activUserFreindsStr = activUserFreinds.map((id) => id.toString());
+    const commoUserFreinds = displayedUserFriendsStr.filter((id) => 
+      activUserFreindsStr.includes(id)
+    ).map(id => new ObjectId(id));
+    const commonFreindsPictures = await usersCollection
+    .find(
+      { _id: { $in: commoUserFreinds } },
+      { projection: { baverImg: 1, profileImg: 1 } }
+    )
+    .toArray();
+    // console.log(pictures);
+
+    res.status(200).json(commonFreindsPictures);
   } catch (error) {
     next(error);
   }
