@@ -4,15 +4,43 @@ import { ObjectId } from "mongodb"; // Importing ObjectId to handle MongoDB Obje
 const router = Router(); // Creating a new router instance
 
 // GET request to fetch a single post by ID
-router.get("/", async (req, res, next) => {
+// router.get("/", async (req, res, next) => {
+//   try {
+//     const post = await postsCollection.find().toArray();
+//     res.status(200).send(post);
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
+router.get("/:_id", async (req, res, next) => {
   try {
-    const post = await postsCollection.find().toArray();
-    res.status(200).send(post); // Send the post as response with status 200
+    const requestingUserId = new ObjectId(req.params._id);
+
+    const requestingUser = await usersCollection.findOne(
+      { _id: requestingUserId },
+      { projection: { freinds: 1 } }
+    );
+
+    if (!requestingUser) {
+      return res.status(404).send("User not found");
+    }
+
+    const query = {
+      $or: [
+        { privacy: "public" },
+        { owner: requestingUserId },
+        { privacy: "private", owner: { $in: requestingUser.freinds } },
+      ],
+    };
+
+    const posts = await postsCollection.find(query).toArray();
+
+    res.status(200).json(posts);
   } catch (error) {
-    next(error); // Pass any errors to the error-handling middleware
+    next(error);
   }
 });
-
 // GET request to fetch a single post by ID
 router.get("/:_id", async (req, res, next) => {
   try {
