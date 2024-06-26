@@ -42,7 +42,7 @@ router.get("/:_id", async (req, res, next) => {
   }
 });
 // GET request to fetch a single post by ID
-router.get("/:_id", async (req, res, next) => {
+router.get("/mypost/:_id", async (req, res, next) => {
   try {
     const userPosts = await postsCollection
       .find({
