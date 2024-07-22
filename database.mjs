@@ -15,9 +15,9 @@ if (!mongoURI) {
 // Create a MongoClient with MongoClientOptions to set the Stable API version
 export const client = new MongoClient(mongoURI, {
   serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
+    version: ServerApiVersion.v1, // Use Stable API version 1
+    strict: true, // Enable strict mode for Stable API
+    deprecationErrors: true, // Enable deprecation error reporting
   },
 });
 

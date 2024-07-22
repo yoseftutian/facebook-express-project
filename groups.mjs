@@ -4,7 +4,13 @@ import { ObjectId } from "mongodb"; // Importing ObjectId to handle MongoDB Obje
 
 const router = Router(); // Creating a new router instance
 
-// GET request to fetch a single group by ID
+/**
+ * GET /:_id
+ * Route to fetch a single group by ID.
+ * 
+ * @param {string} _id - The ID of the group.
+ * @returns {object} - The group object.
+ */
 router.get("/:_id", async (req, res, next) => {
   try {
     const group = await groupsCollection.findOne({
@@ -16,18 +22,28 @@ router.get("/:_id", async (req, res, next) => {
   }
 });
 
-
+/**
+ * GET /
+ * Route to fetch all groups.
+ * 
+ * @returns {Array} - A list of all groups.
+ */
 router.get("/", async (req, res, next) => {
   try {
-    const groups = await groupsCollection.find().toArray(
-    );
-    res.status(200).send(groups);
+    const groups = await groupsCollection.find().toArray(); // Fetch all groups from the collection
+    res.status(200).send(groups); // Send the list of groups as response with status 200
   } catch (error) {
-    next(error);
+    next(error); // Pass any errors to the error-handling middleware
   }
 });
 
-// POST request to create a new group
+/**
+ * POST /
+ * Route to create a new group.
+ * 
+ * @param {object} req.body - The group data from the request body.
+ * @returns {object} - The created group object.
+ */
 router.post("/", async (req, res, next) => {
   const session = client.startSession(); // Start a new session for transaction
 

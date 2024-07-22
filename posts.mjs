@@ -1,61 +1,73 @@
 import { Router } from "express"; // Importing the Router class from express
 import { client, postsCollection, usersCollection } from "./database.mjs"; // Importing database client and collections
 import { ObjectId } from "mongodb"; // Importing ObjectId to handle MongoDB Object IDs
+
 const router = Router(); // Creating a new router instance
 
-// GET request to fetch a single post by ID
-// router.get("/", async (req, res, next) => {
-//   try {
-//     const post = await postsCollection.find().toArray();
-//     res.status(200).send(post);
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
+/**
+ * GET /:_id
+ * Route to fetch posts visible to a specific user by ID.
+ * 
+ * @param {string} _id - The ID of the requesting user.
+ * @returns {Array} - List of posts visible to the user.
+ */
 router.get("/:_id", async (req, res, next) => {
   try {
-    const requestingUserId = new ObjectId(req.params._id);
+    const requestingUserId = new ObjectId(req.params._id); // Convert the _id parameter to ObjectId
 
     const requestingUser = await usersCollection.findOne(
       { _id: requestingUserId },
-      { projection: { freinds: 1 } }
+      { projection: { freinds: 1 } } // Only retrieve the friends field
     );
 
     if (!requestingUser) {
-      return res.status(404).send("User not found");
+      return res.status(404).send("User not found"); // Return 404 if user not found
     }
 
+    // Query for posts visible to the user
     const query = {
       $or: [
-        { privacy: "public" },
-        { owner: requestingUserId },
-        { privacy: "private", owner: { $in: requestingUser.freinds } },
+        { privacy: "public" }, // Public posts
+        { owner: requestingUserId }, // Posts owned by the user
+        { privacy: "private", owner: { $in: requestingUser.freinds } }, // Private posts from friends
       ],
     };
 
-    const posts = await postsCollection.find(query).toArray();
+    const posts = await postsCollection.find(query).toArray(); // Fetch the posts based on the query
 
-    res.status(200).json(posts);
-  } catch (error) {
-    next(error);
-  }
-});
-// GET request to fetch a single post by ID
-router.get("/mypost/:_id", async (req, res, next) => {
-  try {
-    const userPosts = await postsCollection
-      .find({
-        owner: req.params._id,
-      })
-      .toArray();
-    res.status(200).send(userPosts); // Send the post as response with status 200
+    res.status(200).json(posts); // Send the posts as JSON response with status 200
   } catch (error) {
     next(error); // Pass any errors to the error-handling middleware
   }
 });
 
-// POST request to create a new post
+/**
+ * GET /mypost/:_id
+ * Route to fetch all posts owned by a specific user.
+ * 
+ * @param {string} _id - The ID of the user whose posts are being fetched.
+ * @returns {Array} - List of posts owned by the user.
+ */
+router.get("/mypost/:_id", async (req, res, next) => {
+  try {
+    const userPosts = await postsCollection
+      .find({
+        owner: req.params._id, // Find posts where the owner matches the ID parameter
+      })
+      .toArray();
+    res.status(200).send(userPosts); // Send the user's posts as response with status 200
+  } catch (error) {
+    next(error); // Pass any errors to the error-handling middleware
+  }
+});
+
+/**
+ * POST /
+ * Route to create a new post.
+ * 
+ * @param {object} req.body - The data for the new post.
+ * @returns {object} - The created post object.
+ */
 router.post("/", async (req, res, next) => {
   const session = client.startSession(); // Start a new session for transaction
 
@@ -64,7 +76,7 @@ router.post("/", async (req, res, next) => {
 
     const data = req.body; // Get the data from the request body
     const currentTime = new Date();
-    data["createdAt"] = currentTime;
+    data["createdAt"] = currentTime; // Set the createdAt timestamp
     const insertedPost = await postsCollection.insertOne(data, { session }); // Insert the new post into the postsCollection within the session
     await usersCollection.updateOne(
       { _id: new ObjectId(data.owner) }, // Find the user by owner ID
@@ -82,7 +94,13 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-// DELETE request to delete a post by ID
+/**
+ * DELETE /:_id
+ * Route to delete a post by ID.
+ * 
+ * @param {string} _id - The ID of the post to be deleted.
+ * @returns {string} - Success message if deleted.
+ */
 router.delete("/:_id", async (req, res, next) => {
   const session = client.startSession(); // Start a new session for transaction
 

@@ -13,30 +13,41 @@ import cors from "cors";
 import { chatsCollection, client, messagesCollection } from "./database.mjs";
 import { ObjectId } from "mongodb";
 
+// Load environment variables from a .env file
 dotenv.config();
+
+// Object to keep track of connected sockets
 const sockets = {};
 
+// Initialize Express app
 const app = express();
 const port = 3005;
+
+// Enable Cross-Origin Resource Sharing (CORS)
 app.use(cors());
+
+// Enable JSON body parsing in requests
 app.use(express.json());
 
+// Create an HTTP server
 const httpServer = createServer(app);
+
+// Initialize Socket.IO server
 const io = new Server(httpServer, {
   cors: {
     origin: "*", // Allow all origins (for development)
   },
 });
 
-// JWT Middleware
+// JWT Middleware to protect routes
 app.use(
   jwt({
     secret: process.env.JWT_SECRET,
     algorithms: ["HS256"],
-  }).unless({ path: ["/users/login", "/users/register"] })
+  }).unless({ path: ["/users/login", "/users/register"] }) // Exclude login and register routes from JWT protection
 );
 
-// Routes
+// Define routes
 app.use("/products", Products);
 app.use("/posts", Posts);
 app.use("/users", users);
@@ -50,37 +61,43 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).send({ message: err.message });
 });
 
-// Socket.IO connection event
+// Handle new Socket.IO connections
 io.on("connection", (socket) => {
-  const { id } = socket.handshake.query;
-  sockets[id] = socket.id;
+  const { id } = socket.handshake.query; // Extract user ID from handshake query
+  sockets[id] = socket.id; // Map user ID to socket ID
   console.log("A user connected:", socket.id);
 
   // Listen for chat messages
   socket.on("chat message", async (msg) => {
-    //msg: { content, type, sender, chat_id, participants }
-    const session = client.startSession();
+    // msg: { content, type, sender, chat_id, participants }
+    const session = client.startSession(); // Start a MongoDB session
     try {
-      session.startTransaction();
-      const { participants, ...message } = msg;
+      session.startTransaction(); // Begin a transaction
+
+      const { participants, ...message } = msg; // Extract participants from the message
       const messageCreated = await messagesCollection.insertOne(message, {
         session,
-      });
+      }); // Insert message into messages collection
+
       await chatsCollection.updateOne(
         { _id: new ObjectId(message.chat_id) },
         { $push: { messages: messageCreated.insertedId } },
         { session }
-      );
-      await session.commitTransaction();
-      message["_id"] = messageCreated.insertedId;
+      ); // Update the chat document with the new message ID
+
+      await session.commitTransaction(); // Commit the transaction
+
+      message["_id"] = messageCreated.insertedId; // Add the inserted ID to the message object
+
       io.to(
         participants.map((p) => sockets[p]).filter((p) => p !== undefined)
-      ).emit("chat message", message);
+      ).emit("chat message", message); // Emit the message to all participants
+
     } catch (error) {
       console.error(error);
-      await session.abortTransaction();
+      await session.abortTransaction(); // Abort the transaction on error
     } finally {
-      await session.endSession();
+      await session.endSession(); // End the session
     }
   });
 
@@ -88,7 +105,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     for (const key in sockets) {
       if (sockets.hasOwnProperty(key) && sockets[key] == socket.id) {
-        delete sockets[key];
+        delete sockets[key]; // Remove the socket ID from the sockets object
       }
     }
     console.log("User disconnected:", socket.id);

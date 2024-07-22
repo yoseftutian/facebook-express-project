@@ -9,6 +9,7 @@ import { ObjectId } from "mongodb";
 
 const router = Router();
 
+// Route to create a new chat or return an existing one
 router.post("/", async (req, res, next) => {
   const session = client.startSession();
   try {
@@ -45,6 +46,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+// Route to retrieve messages of a specific chat by chat ID
 router.get("/:id/messages", async (req, res, next) => {
   try {
     const chat = await chatsCollection.findOne({
@@ -67,7 +69,7 @@ router.get("/:id/messages", async (req, res, next) => {
   }
 });
 
-// Route to retrieve a single chat message by ID
+// Route to retrieve all chats for a specific user by user ID
 router.get("/:id", async (req, res, next) => {
   try {
     const user = await usersCollection.findOne({
@@ -79,7 +81,6 @@ router.get("/:id", async (req, res, next) => {
     const chats = await chatsCollection
       .find({ _id: { $in: user.chats } })
       .toArray();
-    console.log(chats);
     if (!chats) {
       res.status(404).send({ message: "Chat not found" });
       return;
@@ -90,7 +91,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-// Route to delete a chat message by ID
+// Route to delete a chat by chat ID
 router.delete("/:id", async (req, res, next) => {
   try {
     const chatId = new ObjectId(req.params.id);

@@ -1,9 +1,15 @@
 import { Router } from "express"; // Importing the Router class from express
 import { client, productsCollection, usersCollection } from "./database.mjs"; // Importing database client and collections
 import { ObjectId } from "mongodb"; // Importing ObjectId to handle MongoDB Object IDs
+
 const router = Router(); // Creating a new router instance
 
-// GET request to fetch all products
+/**
+ * GET /
+ * Route to fetch all products.
+ * 
+ * @returns {Array} - List of all products.
+ */
 router.get("/", async (req, res, next) => {
   try {
     const products = await productsCollection.find().toArray(); // Fetch all products from the productsCollection
@@ -14,7 +20,13 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-// GET request to fetch a single product by ID
+/**
+ * GET /:_id
+ * Route to fetch a single product by ID.
+ * 
+ * @param {string} _id - The ID of the product to fetch.
+ * @returns {object} - The product with the specified ID.
+ */
 router.get("/:_id", async (req, res, next) => {
   try {
     const product = await productsCollection.findOne({
@@ -27,7 +39,13 @@ router.get("/:_id", async (req, res, next) => {
   }
 });
 
-// POST request to create a new product
+/**
+ * POST /
+ * Route to create a new product.
+ * 
+ * @param {object} req.body - The data for the new product.
+ * @returns {object} - The created product object.
+ */
 router.post("/", async (req, res, next) => {
   const session = client.startSession(); // Start a new session for transaction
 
@@ -54,29 +72,41 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+/**
+ * DELETE /:_id/:user_id
+ * Route to delete a product by ID.
+ * 
+ * @param {string} _id - The ID of the product to delete.
+ * @param {string} user_id - The ID of the user who owns the product.
+ * @returns {string} - Success message if deleted.
+ */
 router.delete("/:_id/:user_id", async (req, res, next) => {
-  const session = client.startSession();
+  const session = client.startSession(); // Start a new session for transaction
+
   try {
-    session.startTransaction();
+    session.startTransaction(); // Start the transaction
+
+    // Delete the product from the productsCollection
     await productsCollection.deleteOne(
-      {
-        _id: new ObjectId(req.params._id), // Convert the _id parameter to ObjectId
-      },
+      { _id: new ObjectId(req.params._id) }, // Convert the _id parameter to ObjectId
       { session }
     );
+    
+    // Remove the product ID from the user's products array
     await usersCollection.updateOne(
       { _id: new ObjectId(req.params.user_id) },
-      { $pull: { products: { _id: new ObjectId(req.params._id) } } },
+      { $pull: { products: new ObjectId(req.params._id) } },
       { session }
     );
-    await session.commitTransaction();
+    
+    await session.commitTransaction(); // Commit the transaction
     res.status(200).send("Deleted"); // Send a success message with status 200
   } catch (error) {
     await session.abortTransaction(); // Abort the transaction in case of error
     next(error); // Pass any errors to the error-handling middleware
   } finally {
-    session.endSession();
+    await session.endSession(); // End the session
   }
 });
 
-export default router;
+export default router; // Export the router as default

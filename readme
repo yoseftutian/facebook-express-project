@@ -1,18 +1,163 @@
-//   // Save the chat message to the database
-//     try {
-//       if (!chat._id) {
-//         const chatCreated = await chatsCollection.insertOne({
-//           createdAt: new Date(),
-//           ...chat,
-//         });
-//         msg["chatId"] = chatCreated.insertedId;
-//       }
-//       const insertedChat = await chatsCollection.insertOne({
-//         message: msg,
-//         timestamp: new Date(),
-//       });
-//       const chatMessage = {
-//         _id: insertedChat.insertedId,
-//         message: msg,
-//         timestamp: new Date(),
-//       };
+# Facebook social network
+
+Overview
+This project is a Node.js application using Express and MongoDB for managing users, posts, groups, and products. It includes functionalities for user authentication, registration, and CRUD operations on posts, groups, and products.
+
+1. [Features](#features)
+2. [Technologies](#technologies)
+3. [Setup](#setup)
+4. [API Endpoints](#api-endpoints)
+5. [Contributing](#contributing)
+6. [License](#license)
+
+## Features
+
+- **User Management**: Registration, login, and profile retrieval.
+- **Posts**: Create, retrieve, update, and delete posts.
+- **Groups**: Create and manage groups.
+- **Products**: CRUD operations for products.
+- **Authentication**: JWT-based authentication and password hashing.
+
+## Technologies
+
+- **Node.js**: JavaScript runtime for building server-side applications.
+- **Express**: Web framework for Node.js.
+- **MongoDB**: NoSQL database for storing application data.
+- **bcrypt**: Library for hashing passwords.
+- **jsonwebtoken**: Library for creating and verifying JSON Web Tokens.
+- **dotenv**: Module for loading environment variables from a `.env` file.
+
+## Setup
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v14 or later)
+- [MongoDB](https://www.mongodb.com/) (Local or Atlas instance)
+
+### Installation
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/yoseftutian/facebook-express-project
+   cd your-project-name
+   ```
+
+2. **Install Dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Create a `.env` File**
+
+   Copy the `.env.example` file to `.env` and update the values as needed:
+
+   ```env
+   PORT=3000
+   MONGO_URI=mongodb://localhost:27017/your-database
+   JWT_SECRET=your_jwt_secret
+   ```
+
+4. **Start the Application**
+
+   ```bash
+   npm start
+   ```
+
+   The server will start on `http://localhost:3000` by default.
+
+## API Endpoints
+
+### Users
+
+- **POST /login**
+
+  - Authenticate a user.
+  - **Request Body**: `{ "email": "user@example.com", "password": "password" }`
+  - **Response**: `{ "user_id": "user_id", "token": "jwt_token", "profileImg": "profile_img_url" }`
+
+- **POST /register**
+
+  - Register a new user.
+  - **Request Body**: `{ "email": "user@example.com", "password": "password", "profileImg": "profile_img_url" }`
+  - **Response**: `"User Created"`
+
+- **GET /:\_id**
+
+  - Get user profile by ID.
+  - **Response**: `{ "email": "user@example.com", "profileImg": "profile_img_url", ... }`
+
+- **GET /**
+
+  - Get a list of all users.
+  - **Response**: `[ { "email": "user@example.com", "profileImg": "profile_img_url", ... }, ... ]`
+
+- **POST /pictures**
+
+  - Get profile and cover pictures for multiple users.
+  - **Request Body**: `{ "freinds": ["user_id1", "user_id2", ...] }`
+  - **Response**: `[ { "profileImg": "profile_img_url", "baverImg": "cover_img_url" }, ... ]`
+
+- **POST /commonFriendsPictures**
+  - Get pictures of common friends between two users.
+  - **Request Body**: `{ "uid": "active_user_id", "freinds": ["friend_id1", "friend_id2", ...] }`
+  - **Response**: `[ { "profileImg": "profile_img_url" }, ... ]`
+
+### Posts
+
+- **GET /:\_id**
+
+  - Fetch posts visible to the user with a specific ID.
+  - **Response**: `[ { "content": "post_content", "owner": "user_id", "privacy": "public/private", ... }, ... ]`
+
+- **GET /mypost/:\_id**
+
+  - Fetch posts created by the user with a specific ID.
+  - **Response**: `[ { "content": "post_content", "owner": "user_id", ... }, ... ]`
+
+- **POST /**
+
+  - Create a new post.
+  - **Request Body**: `{ "content": "post_content", "owner": "user_id", "privacy": "public/private" }`
+  - **Response**: `{ "content": "post_content", "owner": "user_id", "_id": "post_id" }`
+
+- **DELETE /:\_id**
+  - Delete a post by ID.
+  - **Response**: `"Deleted"`
+
+### Groups
+
+- **GET /:\_id**
+
+  - Fetch a single group by ID.
+  - **Response**: `{ "name": "group_name", "owner": "user_id", ... }`
+
+- **GET /**
+
+  - Fetch all groups.
+  - **Response**: `[ { "name": "group_name", "owner": "user_id", ... }, ... ]`
+
+- **POST /**
+  - Create a new group.
+  - **Request Body**: `{ "name": "group_name", "owner": "user_id", ... }`
+  - **Response**: `{ "name": "group_name", "owner": "user_id", "_id": "group_id" }`
+
+## Contributing
+
+Contributions are welcome! Please follow these steps to contribute:
+
+1. **Fork the Repository**
+2. **Create a New Branch**: `git checkout -b feature/your-feature`
+3. **Make Your Changes**
+4. **Commit Your Changes**: `git commit -am 'Add new feature'`
+5. **Push to the Branch**: `git push origin feature/your-feature`
+6. **Create a Pull Request**
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+Feel free to modify or expand this README based on your project’s specific details and requirements!
