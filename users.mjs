@@ -21,6 +21,7 @@ router.post("/login", async (req, res, next) => {
       delete user.password; // Remove password from user object for security reasons
       const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
         algorithm: "HS256",
+        expiresIn: "1h",
       }); // Create JWT token
       const data = { user_id: user._id, token, profileImg: user.profileImg }; // Prepare response data
       res.status(200).send(data); // Send response
